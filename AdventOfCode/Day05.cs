@@ -12,13 +12,15 @@ public class Day05 : BaseDay
         {
             if (line.Contains('-'))
             {
-                var min = ulong.Parse(line.Split('-')[0]);
-                var max = ulong.Parse(line.Split('-')[1]);
+                var split = line.Split('-');
+                var min = ulong.Parse(split[0]);
+                var max = ulong.Parse(split[1]);
 
                 idRanges.Add((min, max));
+                continue;
             }
 
-            if (ulong.TryParse(line, out ulong id))
+            if (ulong.TryParse(line, out var id))
             {
                 ids.Add(id);
             }
@@ -31,26 +33,43 @@ public class Day05 : BaseDay
     {
         var inputs = GetInputs();
 
-        var freshIngredients = inputs.Ids.Count(id => inputs.IdRanges.Any(bounds => id >= bounds.Min && id <= bounds.Max));
-        
+        var freshIngredients =
+            inputs.Ids.Count(id => inputs.IdRanges.Any(bounds => id >= bounds.Min && id <= bounds.Max));
+
         return new ValueTask<string>(freshIngredients.ToString());
     }
 
     public override ValueTask<string> Solve_2()
     {
         var (idRanges, _) = GetInputs();
-        
-        // Worth a try but gives 'System.OutOfMemoryException'
-        // var freshIngredientIds = new HashSet<ulong>();
-        //
-        // foreach (var valueTuple in idRanges)
-        // {
-        //     for (var i = valueTuple.Min; i <= valueTuple.Max; i++)
-        //     {
-        //         freshIngredientIds.Add(i);
-        //     }
-        // }
-        //   
-        // return new ValueTask<string>(freshIngredientIds.Count.ToString());
+
+        var freshIngredients = 0UL;
+
+        var orderedRanges = idRanges
+            .Distinct()
+            .OrderBy(i => i.Min)
+            .ThenBy(i => i.Max)
+            .ToList();
+
+        var currentMin = orderedRanges[0].Min;
+        var currentMax = orderedRanges[0].Max;
+
+        foreach (var range in orderedRanges.Skip(1))
+        {
+            if (range.Max <= currentMax) continue;
+
+            if (range.Min > currentMax + 1)
+            {
+                freshIngredients += currentMax - currentMin + 1;
+
+                currentMin = range.Min;
+            }
+
+            currentMax = range.Max;
+        }
+
+        freshIngredients += currentMax - currentMin + 1;
+
+        return new ValueTask<string>(freshIngredients.ToString());
     }
 }
