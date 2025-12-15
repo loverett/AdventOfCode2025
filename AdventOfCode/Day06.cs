@@ -24,7 +24,7 @@ public class Day06 : BaseDay
             .Select((_, colIdx) => inputRaw.Select(row => row[colIdx]).ToArray())
             .ToArray();
 
-        ulong totalAnswer = 0;
+        var totalAnswer = 0UL;
 
         foreach (var row in input)
         {
@@ -54,6 +54,56 @@ public class Day06 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        throw new NotImplementedException();
+        var inputRaw = File.ReadAllLines("Inputs/06.txt");
+        var input = new char[inputRaw.Length][];
+        foreach (var line in inputRaw.WithIndex())
+        {
+            input[line.Index] = line.Item.ToCharArray();
+        }
+
+        var totalAnswer = 0UL;
+        var colNum = new List<char>();
+        var colTotal = 0UL;
+        var operand = ' ';
+
+        for (var col = 0; col < input[0].Length; col++)
+        {
+            colNum.Clear();
+
+            // Find operand
+            if (operand == ' ')
+            {
+                operand = input[^1][col];
+
+                colTotal = operand == '*' ? 1UL : 0UL;
+            }
+
+            for (var row = 0; row < input.Length - 1; row++)
+            {
+                if (input[row][col] == ' ') continue;
+                colNum.Add(input[row][col]);
+            }
+            
+            if (!ulong.TryParse(new string(colNum.ToArray()), out var num))
+            {
+                totalAnswer += colTotal;
+                operand = ' ';
+
+                continue;
+            }
+
+            if (operand == '*')
+            {
+                colTotal *= num;
+            }
+            else
+            {
+                colTotal += num;
+            }
+        }
+
+        totalAnswer += colTotal;
+
+        return new ValueTask<string>(totalAnswer.ToString());
     }
 }
